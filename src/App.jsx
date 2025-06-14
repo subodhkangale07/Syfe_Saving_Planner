@@ -1,4 +1,4 @@
-import  { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import './App.css';
 import Dashboard from './components/Dashboard';
 import GoalCard from './components/GoalCard';
@@ -6,6 +6,10 @@ import ContributionModal from './components/ContributionModal';
 import LoadingSpinner from './components/LoadingSpinner';
 import AddGoalModal from './components/AddGoalModal';
 import { fetchExchangeRate } from './utils/api';
+import AchievementSystem from './components/AchievementSystem';
+import GoalInsights from './components/GoalInsights';
+import GoalTemplates from './components/GoalTemplates';
+import DataExport from './components/DataExport';
 
 
 const EXCHANGE_API_KEY = import.meta.env.VITE_EXCHANGE_API_KEY;
@@ -25,25 +29,25 @@ function App() {
   useEffect(() => {
     try {
       console.log('Loading data from localStorage...');
-      
+
       // Load goals
       const savedGoals = localStorage.getItem('savingsGoals');
       console.log('Saved goals raw:', savedGoals);
-      
+
       if (savedGoals && savedGoals !== 'undefined' && savedGoals !== 'null') {
         const parsedGoals = JSON.parse(savedGoals);
         console.log('Parsed goals:', parsedGoals);
-        
+
         if (Array.isArray(parsedGoals)) {
           setGoals(parsedGoals);
           console.log(`Loaded ${parsedGoals.length} goals from localStorage`);
         }
       }
-      
+
       // Load exchange rate data
       const savedRate = localStorage.getItem('exchangeRate');
       const savedTimestamp = localStorage.getItem('lastUpdated');
-      
+
       if (savedRate && savedTimestamp) {
         setExchangeRate(parseFloat(savedRate));
         setLastUpdated(new Date(savedTimestamp));
@@ -51,7 +55,7 @@ function App() {
       } else {
         fetchExchangeRateData();
       }
-      
+
       setIsDataLoaded(true);
     } catch (error) {
       console.error('Error loading data from localStorage:', error);
@@ -78,13 +82,13 @@ function App() {
   const fetchExchangeRateData = async () => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const rate = await fetchExchangeRate(EXCHANGE_API_KEY);
       setExchangeRate(rate);
       const now = new Date();
       setLastUpdated(now);
-      
+
       // Cache the rate and timestamp
       localStorage.setItem('exchangeRate', rate.toString());
       localStorage.setItem('lastUpdated', now.toISOString());
@@ -92,7 +96,7 @@ function App() {
     } catch (err) {
       console.error('Failed to fetch exchange rate:', err);
       setError('Failed to fetch exchange rate');
-      
+
       // Use fallback rate if API fails
       if (!exchangeRate) {
         setExchangeRate(83.5); // Fallback rate
@@ -111,36 +115,36 @@ function App() {
       contributions: [],
       createdAt: new Date().toISOString()
     };
-    
+
     console.log('Adding new goal:', newGoal);
     const updatedGoals = [...goals, newGoal];
     setGoals(updatedGoals);
     setIsAddGoalModalOpen(false);
-    
+
     // Show success message
     console.log('Goal added successfully!');
   };
 
   const addContribution = (goalId, contribution) => {
     console.log('Adding contribution:', contribution, 'to goal:', goalId);
-    
+
     const updatedGoals = goals.map(goal => {
       if (goal.id === goalId) {
         const updatedContributions = [...goal.contributions, contribution];
         const totalSaved = updatedContributions.reduce((sum, contrib) => sum + contrib.amount, 0);
-        
+
         const updatedGoal = {
           ...goal,
           contributions: updatedContributions,
           saved: totalSaved
         };
-        
+
         console.log('Updated goal:', updatedGoal);
         return updatedGoal;
       }
       return goal;
     });
-    
+
     setGoals(updatedGoals);
     setIsContributionModalOpen(false);
     setSelectedGoal(null);
@@ -214,7 +218,7 @@ function App() {
             <h1 className="text-3xl font-bold text-gray-800">Syfe Savings Planner</h1>
           </div>
           <p className="text-gray-600">Track your financial goals and build your future</p>
-          
+
           {/* Debug button (remove in production) */}
           <button
             onClick={debugLocalStorage}
@@ -235,6 +239,7 @@ function App() {
           isLoading={isLoading}
           error={error}
         />
+
 
         {/* Goals Section */}
         <div className="flex justify-between items-center mb-6">
@@ -307,7 +312,7 @@ function App() {
 
         {/* Loading Overlay */}
         {isLoading && <LoadingSpinner />}
-        
+
         {/* Error Display */}
         {error && (
           <div className="fixed bottom-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded z-50">
@@ -321,10 +326,28 @@ function App() {
           </div>
         )}
 
-
+        
         <div>
-
+          <AchievementSystem goals={goals} />
         </div>
+        <div>
+          {goals.map(goal => (
+            <GoalInsights
+              key={goal.id}
+              goal={goal}
+              exchangeRate={exchangeRate || 83.5}
+            />
+          ))}</div>
+        <div> <GoalTemplates /> </div>
+
+        <footer className="mt-12 text-center text-gray-500">
+          <p className="text-sm">
+            © {new Date().getFullYear()} Syfe Savings Planner. All rights reserved.
+          </p>
+          <p className="text-xs mt-2">
+            Made with ❤️ by Subodh Kangale
+          </p>
+        </footer>
       </div>
     </div>
   );
