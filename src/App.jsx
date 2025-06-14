@@ -1,16 +1,7 @@
 import { useState, useEffect } from 'react';
 import './App.css';
 import Dashboard from './components/Dashboard';
-import GoalCard from './components/GoalCard';
-import ContributionModal from './components/ContributionModal';
-import LoadingSpinner from './components/LoadingSpinner';
-import AddGoalModal from './components/AddGoalModal';
 import { fetchExchangeRate } from './utils/api';
-import AchievementSystem from './components/AchievementSystem';
-import GoalInsights from './components/GoalInsights';
-import GoalTemplates from './components/GoalTemplates';
-import DataExport from './components/DataExport';
-
 
 const EXCHANGE_API_KEY = import.meta.env.VITE_EXCHANGE_API_KEY;
 
@@ -241,105 +232,7 @@ function App() {
         />
 
 
-        {/* Goals Section */}
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">
-            Your Goals ({goals.length})
-          </h2>
-          <button
-            onClick={() => setIsAddGoalModalOpen(true)}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
-          >
-            <span className="mr-2">+</span>
-            Add Goal
-          </button>
-        </div>
-
-        {/* Goals Grid */}
-        {goals.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-gray-400 text-6xl mb-4">🎯</div>
-            <h3 className="text-xl font-semibold text-gray-600 mb-2">No goals yet</h3>
-            <p className="text-gray-500 mb-6">Create your first savings goal to get started!</p>
-            <button
-              onClick={() => setIsAddGoalModalOpen(true)}
-              className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Create Your First Goal
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {goals.map(goal => (
-              <GoalCard
-                key={goal.id}
-                goal={goal}
-                exchangeRate={exchangeRate || 83.5}
-                onAddContribution={() => openContributionModal(goal)}
-                onDelete={() => deleteGoal(goal.id)}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* Data persistence indicator */}
-        {goals.length > 0 && (
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-500">
-              ✅ Your data is automatically saved locally
-            </p>
-          </div>
-        )}
-
-        {/* Modals */}
-        {isAddGoalModalOpen && (
-          <AddGoalModal
-            onClose={() => setIsAddGoalModalOpen(false)}
-            onSubmit={addGoal}
-          />
-        )}
-
-        {isContributionModalOpen && selectedGoal && (
-          <ContributionModal
-            goal={selectedGoal}
-            onClose={() => {
-              setIsContributionModalOpen(false);
-              setSelectedGoal(null);
-            }}
-            onSubmit={(contribution) => addContribution(selectedGoal.id, contribution)}
-          />
-        )}
-
-        {/* Loading Overlay */}
-        {isLoading && <LoadingSpinner />}
-
-        {/* Error Display */}
-        {error && (
-          <div className="fixed bottom-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded z-50">
-            <span className="block sm:inline">{error}</span>
-            <button
-              onClick={() => setError(null)}
-              className="ml-2 text-red-500 hover:text-red-700"
-            >
-              ×
-            </button>
-          </div>
-        )}
-
         
-        <div>
-          <AchievementSystem goals={goals} />
-        </div>
-        <div>
-          {goals.map(goal => (
-            <GoalInsights
-              key={goal.id}
-              goal={goal}
-              exchangeRate={exchangeRate || 83.5}
-            />
-          ))}</div>
-        <div> <GoalTemplates /> </div>
-
         <footer className="mt-12 text-center text-gray-500">
           <p className="text-sm">
             © {new Date().getFullYear()} Syfe Savings Planner. All rights reserved.
