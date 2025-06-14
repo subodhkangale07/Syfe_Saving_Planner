@@ -13,11 +13,6 @@ A lightweight, client-side savings planner that helps users create and track mul
 - **Responsive Design**: Works seamlessly across desktop and mobile devices
 - **Data Persistence**: Goals and contributions persist using `localStorage`
 
----
-
-## 🚀 Live Demo
-
-[View Live Demo](https://your-demo-link.vercel.app) <!-- Replace with your actual deployed URL -->
 
 ---
 
