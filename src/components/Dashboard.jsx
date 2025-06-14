@@ -1,3 +1,6 @@
+import React from 'react';
+import DataExport from './DataExport';
+
 const Dashboard = ({ 
   totalTarget, 
   totalSaved, 
@@ -36,9 +39,9 @@ const Dashboard = ({
           </div>
           <h2 className="text-xl font-semibold">Financial Overview</h2>
         </div>
-        {/* <div>
+        <div>
           <DataExport/>
-        </div> */}
+        </div>
         <button
           onClick={onRefreshRate}
           disabled={isLoading}

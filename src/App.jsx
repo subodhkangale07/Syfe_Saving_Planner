@@ -1,7 +1,12 @@
-import { useState, useEffect } from 'react';
+import  { useState, useEffect } from 'react';
 import './App.css';
 import Dashboard from './components/Dashboard';
+import GoalCard from './components/GoalCard';
+import ContributionModal from './components/ContributionModal';
+import LoadingSpinner from './components/LoadingSpinner';
+import AddGoalModal from './components/AddGoalModal';
 import { fetchExchangeRate } from './utils/api';
+
 
 const EXCHANGE_API_KEY = import.meta.env.VITE_EXCHANGE_API_KEY;
 
@@ -20,25 +25,25 @@ function App() {
   useEffect(() => {
     try {
       console.log('Loading data from localStorage...');
-
+      
       // Load goals
       const savedGoals = localStorage.getItem('savingsGoals');
       console.log('Saved goals raw:', savedGoals);
-
+      
       if (savedGoals && savedGoals !== 'undefined' && savedGoals !== 'null') {
         const parsedGoals = JSON.parse(savedGoals);
         console.log('Parsed goals:', parsedGoals);
-
+        
         if (Array.isArray(parsedGoals)) {
           setGoals(parsedGoals);
           console.log(`Loaded ${parsedGoals.length} goals from localStorage`);
         }
       }
-
+      
       // Load exchange rate data
       const savedRate = localStorage.getItem('exchangeRate');
       const savedTimestamp = localStorage.getItem('lastUpdated');
-
+      
       if (savedRate && savedTimestamp) {
         setExchangeRate(parseFloat(savedRate));
         setLastUpdated(new Date(savedTimestamp));
@@ -46,7 +51,7 @@ function App() {
       } else {
         fetchExchangeRateData();
       }
-
+      
       setIsDataLoaded(true);
     } catch (error) {
       console.error('Error loading data from localStorage:', error);
@@ -73,13 +78,13 @@ function App() {
   const fetchExchangeRateData = async () => {
     setIsLoading(true);
     setError(null);
-
+    
     try {
       const rate = await fetchExchangeRate(EXCHANGE_API_KEY);
       setExchangeRate(rate);
       const now = new Date();
       setLastUpdated(now);
-
+      
       // Cache the rate and timestamp
       localStorage.setItem('exchangeRate', rate.toString());
       localStorage.setItem('lastUpdated', now.toISOString());
@@ -87,7 +92,7 @@ function App() {
     } catch (err) {
       console.error('Failed to fetch exchange rate:', err);
       setError('Failed to fetch exchange rate');
-
+      
       // Use fallback rate if API fails
       if (!exchangeRate) {
         setExchangeRate(83.5); // Fallback rate
@@ -106,36 +111,36 @@ function App() {
       contributions: [],
       createdAt: new Date().toISOString()
     };
-
+    
     console.log('Adding new goal:', newGoal);
     const updatedGoals = [...goals, newGoal];
     setGoals(updatedGoals);
     setIsAddGoalModalOpen(false);
-
+    
     // Show success message
     console.log('Goal added successfully!');
   };
 
   const addContribution = (goalId, contribution) => {
     console.log('Adding contribution:', contribution, 'to goal:', goalId);
-
+    
     const updatedGoals = goals.map(goal => {
       if (goal.id === goalId) {
         const updatedContributions = [...goal.contributions, contribution];
         const totalSaved = updatedContributions.reduce((sum, contrib) => sum + contrib.amount, 0);
-
+        
         const updatedGoal = {
           ...goal,
           contributions: updatedContributions,
           saved: totalSaved
         };
-
+        
         console.log('Updated goal:', updatedGoal);
         return updatedGoal;
       }
       return goal;
     });
-
+    
     setGoals(updatedGoals);
     setIsContributionModalOpen(false);
     setSelectedGoal(null);
@@ -209,7 +214,7 @@ function App() {
             <h1 className="text-3xl font-bold text-gray-800">Syfe Savings Planner</h1>
           </div>
           <p className="text-gray-600">Track your financial goals and build your future</p>
-
+          
           {/* Debug button (remove in production) */}
           <button
             onClick={debugLocalStorage}
@@ -231,16 +236,95 @@ function App() {
           error={error}
         />
 
+        {/* Goals Section */}
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-gray-800">
+            Your Goals ({goals.length})
+          </h2>
+          <button
+            onClick={() => setIsAddGoalModalOpen(true)}
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+          >
+            <span className="mr-2">+</span>
+            Add Goal
+          </button>
+        </div>
 
+        {/* Goals Grid */}
+        {goals.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="text-gray-400 text-6xl mb-4">🎯</div>
+            <h3 className="text-xl font-semibold text-gray-600 mb-2">No goals yet</h3>
+            <p className="text-gray-500 mb-6">Create your first savings goal to get started!</p>
+            <button
+              onClick={() => setIsAddGoalModalOpen(true)}
+              className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Create Your First Goal
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {goals.map(goal => (
+              <GoalCard
+                key={goal.id}
+                goal={goal}
+                exchangeRate={exchangeRate || 83.5}
+                onAddContribution={() => openContributionModal(goal)}
+                onDelete={() => deleteGoal(goal.id)}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Data persistence indicator */}
+        {goals.length > 0 && (
+          <div className="mt-6 text-center">
+            <p className="text-sm text-gray-500">
+              ✅ Your data is automatically saved locally
+            </p>
+          </div>
+        )}
+
+        {/* Modals */}
+        {isAddGoalModalOpen && (
+          <AddGoalModal
+            onClose={() => setIsAddGoalModalOpen(false)}
+            onSubmit={addGoal}
+          />
+        )}
+
+        {isContributionModalOpen && selectedGoal && (
+          <ContributionModal
+            goal={selectedGoal}
+            onClose={() => {
+              setIsContributionModalOpen(false);
+              setSelectedGoal(null);
+            }}
+            onSubmit={(contribution) => addContribution(selectedGoal.id, contribution)}
+          />
+        )}
+
+        {/* Loading Overlay */}
+        {isLoading && <LoadingSpinner />}
         
-        <footer className="mt-12 text-center text-gray-500">
-          <p className="text-sm">
-            © {new Date().getFullYear()} Syfe Savings Planner. All rights reserved.
-          </p>
-          <p className="text-xs mt-2">
-            Made with ❤️ by Subodh Kangale
-          </p>
-        </footer>
+        {/* Error Display */}
+        {error && (
+          <div className="fixed bottom-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded z-50">
+            <span className="block sm:inline">{error}</span>
+            <button
+              onClick={() => setError(null)}
+              className="ml-2 text-red-500 hover:text-red-700"
+            >
+              ×
+            </button>
+          </div>
+        )}
+
+
+        <div>
+
+        </div>
       </div>
     </div>
   );
